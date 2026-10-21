@@ -1,4 +1,4 @@
-name: Build OnePlus 9r Series KSUN Test
+name: Build OnePlus 9r Series Bakasu Test
 
 on:
   workflow_call:
