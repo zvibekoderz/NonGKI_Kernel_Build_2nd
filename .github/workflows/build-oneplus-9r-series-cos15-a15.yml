@@ -29,11 +29,11 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
-  KERNELSU_SOURCE : "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh"
-  KERNELSU_BRANCH : "legacy"
+  KERNELSU_SOURCE : "https://github.com/Baka-SU/BakaSU.git"
+  KERNELSU_BRANCH : "sync-susfs"
 
-  KERNELSU_AUTO_GET : "false" # if u want easy setting kernelsu, u can true.
-  KERNELSU_AUTO_FORK : "resukisu" # xxksu, rsuntk, next, resukisu and sukisu
+  KERNELSU_AUTO_GET : "true" # if u want easy setting kernelsu, u can true.
+  KERNELSU_AUTO_FORK : "bakasu" # xxksu, rsuntk, next, resukisu and sukisu
 
   SUSFS_ENABLE : true
   SUSFS_FIXED : true
