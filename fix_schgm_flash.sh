@@ -23,15 +23,15 @@ sed -i '/^#include <linux\/bitops.h>/a #include "smb5-lib.h"' drivers/power/supp
 echo "Fixing oplus_battery_msm8250.c compilation error..."
 
 # Fix oplus_battery_msm8250.c: include smb5-lib.h for struct smb_charger definition
-# Find the first include and add smb5-lib.h after it
-sed -i '/^#include <linux\/module.h>/a #include "smb5-lib.h"' drivers/power/oplus/v1/charger_ic/oplus_battery_msm8250.c
+# The header is in drivers/power/supply/qcom/ so we need the correct relative path
+sed -i '/^#include <linux\/module.h>/a #include "../../../supply/qcom/smb5-lib.h"' drivers/power/oplus/v1/charger_ic/oplus_battery_msm8250.c
 
 echo "Fixing oplus_charger.h incomplete type error..."
 
 # Fix oplus_charger.h: include qcom-pmic.h for struct qcom_pmic definition
-# The struct qcom_pmic is likely defined in qcom-pmic.h or similar
-# Add after the first include
-sed -i '/^#include <linux\/types.h>/a #include "qcom-pmic.h"' drivers/power/oplus/v1/charger_ic/../oplus_charger.h
+# The struct qcom_pmic is likely defined in qcom-pmic.h in the same directory as smb5-lib.h
+# Add after the first include with correct relative path
+sed -i '/^#include <linux\/types.h>/a #include "../../../supply/qcom/qcom-pmic.h"' drivers/power/oplus/v1/charger_ic/../oplus_charger.h
 
 echo "Fixing Makefile to include smb5-lib.o..."
 
