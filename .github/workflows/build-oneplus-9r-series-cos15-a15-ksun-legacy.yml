@@ -30,8 +30,8 @@ env:
   DEFCONFIG_FROM_BOOT: false
 
   # KernelSU-Next Legacy
-  KERNELSU_SOURCE : "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh"
-  KERNELSU_BRANCH : "legacy"
+  KERNELSU_SOURCE: "https://github.com/KernelSU-Next/KernelSU-Next.git"
+  KERNELSU_BRANCH: "legacy"
 
   KERNELSU_AUTO_GET : "false" # if u want easy setting kernelsu, u can true.
   # KERNELSU_AUTO_FORK : "resukisu" # xxksu, rsuntk, next, resukisu and sukisu
