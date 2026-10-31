@@ -83,8 +83,8 @@ env:
   BUILD_DEBUGGER: "true" # Output build errors.
   SKIP_PATCH: "false" # Ignore errors found in Patch Debugger.
 
-  BUILD_OTHER_CONFIG: "false" # Merge config files - disabled to avoid missing config files
-  MERGE_CONFIG_FILES: ""
+  BUILD_OTHER_CONFIG: "true" # Merge config files - enable to apply OnePlus-specific configs
+  MERGE_CONFIG_FILES: "vendor/debugfs.config,vendor/kona-perf_defconfig,vendor/oplus.config"
 
   FREE_MORE_SPACE: "false" # if u want get more space, enabled it.
 
