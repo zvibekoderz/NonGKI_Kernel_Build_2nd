@@ -149,9 +149,15 @@ jobs:
           cd ../../
 
           # Fix schgm-flash.c compilation error - include smb5-lib.h unconditionally
+          # The issue: schgm-flash.c only includes smb5-lib.h when OPLUS_FEATURE_CHG_BASIC is NOT defined,
+          # but for OnePlus devices this macro IS defined, causing missing struct definitions.
+          # Also, schgm-flash.h declares functions using struct smb_charger* but doesn't include smb5-lib.h
           echo "Fixing schgm-flash.c compilation error..."
-          sed -i 's/#ifndef OPLUS_FEATURE_CHG_BASIC/#if 0 \/\/ OPLUS_FEATURE_CHG_BASIC - always include smb5-lib.h for struct smb_charger and smb_irq_data/' drivers/power/supply/qcom/schgm-flash.c
-          sed -i 's/#endif \/\/ OPLUS_FEATURE_CHG_BASIC/#endif \/\/ OPLUS_FEATURE_CHG_BASIC/' drivers/power/supply/qcom/schgm-flash.c
+          sed -i 's|#ifndef OPLUS_FEATURE_CHG_BASIC|#if 0 // OPLUS_FEATURE_CHG_BASIC - always include smb5-lib.h|' drivers/power/supply/qcom/schgm-flash.c
+
+          # Also fix schgm-flash.h to include smb5-lib.h for struct smb_charger definition
+          echo "Fixing schgm-flash.h compilation error..."
+          sed -i '/^#include <linux\/bitops.h>/a #include "smb5-lib.h"' drivers/power/supply/qcom/schgm-flash.h
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
