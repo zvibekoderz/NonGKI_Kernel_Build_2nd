@@ -2124,10 +2124,10 @@ index 8edf44a..1f7cfe5 100644
  	 * Always return at least 1 from get_anon_bdev.
 diff --git a/fs/susfs.c b/fs/susfs.c
 new file mode 100644
-index 0000000..51a6865
+index 0000000..cad51a2
 --- /dev/null
 +++ b/fs/susfs.c
-@@ -0,0 +1,1972 @@
+@@ -0,0 +1,2009 @@
 +#include <linux/version.h>
 +#include <linux/cred.h>
 +#include <linux/fs.h>
@@ -2156,6 +2156,7 @@ index 0000000..51a6865
 +#include <linux/limits.h>
 +#include <linux/rcupdate.h>
 +#include <linux/string.h>
++#include <linux/vmalloc.h>
 +#include <linux/susfs.h>
 +#include "fuse/fuse_i.h"
 +#include "mount.h"
@@ -2165,6 +2166,24 @@ index 0000000..51a6865
 +extern struct cred *ksu_cred;
 +extern int susfs_get_non_sus_mnt_id_from_mnt(struct mount *orig_mnt);
 +extern struct vfsmount *susfs_get_non_sus_vfsmnt_from_vfsmnt(struct vfsmount *vfsmnt);
++
++/*
++ * kvmalloc() was introduced in v4.12. 4.4 / 4.9 do not have it, but they do
++ * have kvfree(), so only kvmalloc() needs a fallback here.
++ */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0)
++static inline void *susfs_kvmalloc(size_t size, gfp_t flags)
++{
++	void *p;
++
++	p = kmalloc(size, flags);
++	if (!p)
++		p = vmalloc(size);
++	if (p && (flags & __GFP_ZERO))
++		memset(p, 0, size);
++	return p;
++}
++#endif
 +
 +#ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
 +DEFINE_STATIC_KEY_TRUE(susfs_is_log_enabled);
@@ -3444,7 +3463,11 @@ index 0000000..51a6865
 +		return ret;
 +	}
 +
++#if defined(STATX_BASIC_STATS)
 +	ret = vfs_getattr(&path, &st, STATX_BASIC_STATS, 0);
++#else
++	ret = vfs_getattr(&path, &st);
++#endif
 +	path_put(&path);
 +	if (ret) {
 +		SUSFS_LOGE("failed to get the attributes of '%s': %d\n", app_path, ret);
@@ -3520,7 +3543,11 @@ index 0000000..51a6865
 +	int err = 0;
 +	static bool is_uid_filter_set_before = false;
 +
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0)
++	info = susfs_kvmalloc(sizeof(*info), GFP_KERNEL | __GFP_ZERO);
++#else
 +	info = kvmalloc(sizeof(*info), GFP_KERNEL | __GFP_ZERO);
++#endif
 +	if (!info) {
 +		err = -ENOMEM;
 +		goto out_copy_to_user;
@@ -3550,7 +3577,11 @@ index 0000000..51a6865
 +	 * The app names are stored as they are, so that the uids of the apps can
 +	 * be resolved again later on, when the apps are installed or uninstalled.
 +	 */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0)
++	new_app_strings = susfs_kvmalloc(app_str_len + 1, GFP_KERNEL | __GFP_ZERO);
++#else
 +	new_app_strings = kvmalloc(app_str_len + 1, GFP_KERNEL | __GFP_ZERO);
++#endif
 +	if (!new_app_strings) {
 +		err = -ENOMEM;
 +		goto out_copy_to_user;
@@ -3601,7 +3632,8 @@ index 0000000..51a6865
 +		is_uid_filter_set_before = true;
 +	mutex_unlock(&susfs_mutex_lock_priority_uid_filter);
 +	synchronize_rcu();
-+	kfree_rcu(old_bitmap, rcu);
++	if (old_bitmap)
++		kfree_rcu(old_bitmap, rcu);
 +
 +	SUSFS_LOGI("the priority uid filter is set\n");
 +	err = 0;
@@ -3647,7 +3679,11 @@ index 0000000..51a6865
 +	mutex_lock(&susfs_mutex_lock_priority_uid_filter);
 +	if (susfs_priority_app_strings) {
 +		app_str_len = strlen(susfs_priority_app_strings);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0)
++		app_strings = susfs_kvmalloc(app_str_len + 1, GFP_KERNEL | __GFP_ZERO);
++#else
 +		app_strings = kvmalloc(app_str_len + 1, GFP_KERNEL | __GFP_ZERO);
++#endif
 +		if (app_strings)
 +			memcpy(app_strings, susfs_priority_app_strings, app_str_len + 1);
 +	}
@@ -3675,7 +3711,8 @@ index 0000000..51a6865
 +	new_bitmap = NULL;
 +	mutex_unlock(&susfs_mutex_lock_priority_uid_filter);
 +	synchronize_rcu();
-+	kfree_rcu(old_bitmap, rcu);
++	if (old_bitmap)
++		kfree_rcu(old_bitmap, rcu);
 +
 +	SUSFS_LOGI("the uids of the priority uid filter are resolved again\n");
 +
