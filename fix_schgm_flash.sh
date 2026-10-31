@@ -6,6 +6,8 @@
 # 2. schgm-flash.h declares functions using struct smb_charger* but doesn't include smb5-lib.h
 # 3. The Makefile excludes smb5-lib.o when OPLUS_FEATURE_CHG_BASIC is defined,
 #    causing linker errors for smblib_write, smblib_read, smblib_masked_write
+# 4. oplus_battery_msm8250.c uses struct smb_charger but doesn't include smb5-lib.h
+# 5. oplus_charger.h uses struct qcom_pmic but doesn't include its definition
 
 set -e
 
@@ -17,6 +19,19 @@ sed -i 's|#ifndef OPLUS_FEATURE_CHG_BASIC|#if 0 // OPLUS_FEATURE_CHG_BASIC - alw
 # Fix schgm-flash.h: include smb5-lib.h for struct smb_charger definition
 # Add after the first include line
 sed -i '/^#include <linux\/bitops.h>/a #include "smb5-lib.h"' drivers/power/supply/qcom/schgm-flash.h
+
+echo "Fixing oplus_battery_msm8250.c compilation error..."
+
+# Fix oplus_battery_msm8250.c: include smb5-lib.h for struct smb_charger definition
+# Find the first include and add smb5-lib.h after it
+sed -i '/^#include <linux\/module.h>/a #include "smb5-lib.h"' drivers/power/oplus/v1/charger_ic/oplus_battery_msm8250.c
+
+echo "Fixing oplus_charger.h incomplete type error..."
+
+# Fix oplus_charger.h: include qcom-pmic.h for struct qcom_pmic definition
+# The struct qcom_pmic is likely defined in qcom-pmic.h or similar
+# Add after the first include
+sed -i '/^#include <linux\/types.h>/a #include "qcom-pmic.h"' drivers/power/oplus/v1/charger_ic/../oplus_charger.h
 
 echo "Fixing Makefile to include smb5-lib.o..."
 
